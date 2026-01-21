@@ -1,0 +1,113 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{HTTPS} !=on [OR]
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    #RewriteCond %{HTTP_HOST} !^www\. [NC]
+    #RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    #RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    #RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# -----------------------------
+# Genel güvenlik
+# -----------------------------
+<IfModule mod_headers.c>
+    # HSTS - HTTPS zorlaması ve preload için
+    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+
+    # Clickjacking koruması
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # MIME türü sniffing engelle
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Referrer politikası
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # gereksiz API'leri kapat
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+    # Güvenli içerik politikası
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' https: data:; connect-src 'self' https:; frame-ancestors 'self';"
+</IfModule>
+
+# -----------------------------
+# Sunucu bilgi sızdırmasını azalt
+# -----------------------------
+# ServerSignature, ServerTokens çoğu zaman httpd.conf'da yönetilir
+<IfModule mod_security2.c>
+
+</IfModule>
+
+# -----------------------------
+# Erişim kısıtlamaları / dosya koruma
+# -----------------------------
+# .htaccess, .env, hassas dosyaları engelle
+<FilesMatch "(^\.|(\.env|\.ini|\.log|composer\.json|composer\.lock|package\.json))$">
+    Require all denied
+</FilesMatch>
+
+# .htpasswd ve htaccess dosyasını koru
+<Files ~ "^\.ht">
+    Require all denied
+</Files>
+
+# PHP dosyalarının yükleme klasörlerinde çalıştırılmasını engelle
+<IfModule mod_php.c>
+    <DirectoryMatch "(/uploads|/uploads/.*)$">
+        <FilesMatch "\.(php|php5|phtml)$">
+            Require all denied
+        </FilesMatch>
+    </DirectoryMatch>
+</IfModule>
+
+# Sadece temel HTTP methodlarını izin ver
+<LimitExcept GET POST HEAD>
+    Require all denied
+</LimitExcept>
+
+# -----------------------------
+# Dizine erişim ve hotlink engelleme
+# -----------------------------
+# Dizine listelemeyi kapat
+Options -Indexes
+
+# -----------------------------
+# İstek filtreleme - basit saldırı işlemleri için
+# -----------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # tehlikeli karakterler içeren URL'leri reddet
+    RewriteCond %{REQUEST_URI} (\<|\>|\(|\)|\;|\%3C|\%3E|\%3B) [NC]
+    RewriteRule .* - [F,L]
+
+    # SQLi göstergeleri (çok basit kontrol)
+    RewriteCond %{QUERY_STRING} (\b(union|select|insert|drop|update|delete|benchmark)\b) [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# -----------------------------
+# Önbellekleme & sıkıştırma
+# -----------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/font-woff2 "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+    # ETag kaldır
+    FileETag None
+    Header unset ETag
+</IfModule>
