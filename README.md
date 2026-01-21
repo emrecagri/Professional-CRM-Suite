@@ -2,7 +2,7 @@
 
 ![Language](https://img.shields.io/badge/Language-PHP%208-777BB4?style=flat&logo=php&logoColor=white)
 ![Database](https://img.shields.io/badge/Database-MySQL-4479A1?style=flat&logo=mysql&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
+![License](https://img.shields.io/badge/License-GNU%20GPLv3-blue.svg)
 
 [🇹🇷 Türkçe](#-türkçe) | [🇬🇧 English](#-english) 
 
